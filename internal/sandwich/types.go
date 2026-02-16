@@ -15,6 +15,8 @@ type Config struct {
 	AllowNesting             bool
 	AllowBoundaryWithOutside bool
 	Paths                    []string
+	IncludePatterns          []string
+	ExcludePatterns          []string
 }
 
 // Block represents a BEGIN/END sandwich block.

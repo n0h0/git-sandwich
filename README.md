@@ -80,8 +80,32 @@ git-sandwich [options] [paths...]
 | `--allow-nesting`                 | `false`       | Allow nested BEGIN/END blocks                    |
 | `--allow-boundary-with-outside`   | `false`       | Allow boundary changes together with outside changes |
 | `--json`                          | `false`       | Output results in JSON format                    |
+| `--include <glob>`                |               | Glob pattern for files to include (repeatable)   |
+| `--exclude <glob>`                |               | Glob pattern for files to exclude (repeatable)   |
 
 Positional arguments `[paths...]` are passed as path filters to `git diff`.
+
+### File Filtering (`--include` / `--exclude`)
+
+Use `--include` and `--exclude` to control which files are validated using glob patterns. Patterns support `**` for recursive directory matching.
+
+- **`--include` only**: Only files matching at least one pattern are validated.
+- **`--exclude` only**: Files matching any pattern are skipped.
+- **Both specified**: `--include` is applied first, then `--exclude` removes from that set.
+- **Directory shorthand**: A plain directory name like `vendor` is automatically treated as `vendor/**`.
+
+Filtered files are completely excluded from the results (they do not appear as skipped).
+
+```bash
+# Only validate Go files
+git-sandwich --start '# START' --end '# END' --include '**/*.go'
+
+# Exclude vendor and generated directories
+git-sandwich --start '# START' --end '# END' --exclude vendor --exclude generated
+
+# Combine: validate Go files except tests
+git-sandwich --start '# START' --end '# END' --include '**/*.go' --exclude '**/*_test.go'
+```
 
 ### Exit Codes
 

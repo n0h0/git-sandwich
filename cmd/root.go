@@ -18,6 +18,8 @@ var (
 	allowNesting             bool
 	allowBoundaryWithOutside bool
 	jsonOutput               bool
+	includePatterns          []string
+	excludePatterns          []string
 )
 
 var rootCmd = &cobra.Command{
@@ -43,6 +45,8 @@ designated BEGIN/END blocks. Changes outside these blocks are rejected.`,
 			AllowNesting:             allowNesting,
 			AllowBoundaryWithOutside: allowBoundaryWithOutside,
 			Paths:                    args,
+			IncludePatterns:          includePatterns,
+			ExcludePatterns:          excludePatterns,
 		}
 
 		result, err := sandwich.Validate(cfg)
@@ -83,6 +87,8 @@ func init() {
 	rootCmd.Flags().BoolVar(&allowNesting, "allow-nesting", false, "allow nested blocks")
 	rootCmd.Flags().BoolVar(&allowBoundaryWithOutside, "allow-boundary-with-outside", false, "allow boundary changes with outside changes")
 	rootCmd.Flags().BoolVar(&jsonOutput, "json", false, "output in JSON format")
+	rootCmd.Flags().StringArrayVar(&includePatterns, "include", nil, "glob pattern for files to include (repeatable)")
+	rootCmd.Flags().StringArrayVar(&excludePatterns, "exclude", nil, "glob pattern for files to exclude (repeatable)")
 
 	_ = rootCmd.MarkFlagRequired("start")
 	_ = rootCmd.MarkFlagRequired("end")

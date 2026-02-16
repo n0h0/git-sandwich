@@ -302,3 +302,83 @@ func TestIntegration_NoBlocks_Skip(t *testing.T) {
 		t.Error("expected success for file without blocks")
 	}
 }
+
+func TestIntegration_IncludeExclude(t *testing.T) {
+	dir := setupTestRepo(t)
+	origDir, _ := os.Getwd()
+	os.Chdir(dir)
+	defer os.Chdir(origDir)
+
+	// Base: two files with blocks, one outside change would fail
+	writeFile(t, dir, "src/app.go", "line 1\n# START\noriginal\n# END\nline 5\n")
+	writeFile(t, dir, "vendor/lib.go", "line 1\n# START\noriginal\n# END\nline 5\n")
+	writeFile(t, dir, "docs/guide.md", "line 1\n# START\noriginal\n# END\nline 5\n")
+	commit(t, dir, "base")
+
+	cmd := exec.Command("git", "checkout", "-b", "feature")
+	cmd.Dir = dir
+	cmd.Run()
+
+	// Change inside block in src/app.go (PASS), outside block in vendor/lib.go and docs/guide.md (FAIL)
+	writeFile(t, dir, "src/app.go", "line 1\n# START\nmodified\n# END\nline 5\n")
+	writeFile(t, dir, "vendor/lib.go", "CHANGED\n# START\noriginal\n# END\nline 5\n")
+	writeFile(t, dir, "docs/guide.md", "CHANGED\n# START\noriginal\n# END\nline 5\n")
+	commit(t, dir, "changes in multiple files")
+
+	t.Run("no filter fails", func(t *testing.T) {
+		cfg := makeCfg()
+		result, err := Validate(cfg)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if result.Success {
+			t.Error("expected failure without filters")
+		}
+	})
+
+	t.Run("include only src passes", func(t *testing.T) {
+		cfg := makeCfg()
+		cfg.IncludePatterns = []string{"src/**"}
+		result, err := Validate(cfg)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if !result.Success {
+			t.Errorf("expected success with include=src/**, got failure: %+v", result.Files)
+		}
+		if len(result.Files) != 1 {
+			t.Errorf("expected 1 file, got %d", len(result.Files))
+		}
+	})
+
+	t.Run("exclude vendor and docs passes", func(t *testing.T) {
+		cfg := makeCfg()
+		cfg.ExcludePatterns = []string{"vendor", "docs"}
+		result, err := Validate(cfg)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if !result.Success {
+			t.Errorf("expected success with exclude=vendor,docs, got failure: %+v", result.Files)
+		}
+		if len(result.Files) != 1 {
+			t.Errorf("expected 1 file, got %d", len(result.Files))
+		}
+	})
+
+	t.Run("include and exclude combined", func(t *testing.T) {
+		cfg := makeCfg()
+		cfg.IncludePatterns = []string{"**/*.go"}
+		cfg.ExcludePatterns = []string{"vendor"}
+		result, err := Validate(cfg)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if !result.Success {
+			t.Errorf("expected success with include=**/*.go exclude=vendor, got failure: %+v", result.Files)
+		}
+		if len(result.Files) != 1 {
+			t.Errorf("expected 1 file, got %d", len(result.Files))
+		}
+	})
+}

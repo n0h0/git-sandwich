@@ -23,6 +23,8 @@ func Validate(cfg *Config) (*Result, error) {
 		return nil, fmt.Errorf("failed to parse diff: %w", err)
 	}
 
+	fileDiffs = filterFiles(fileDiffs, cfg.IncludePatterns, cfg.ExcludePatterns)
+
 	result := &Result{Success: true}
 	for _, fd := range fileDiffs {
 		fr := validateFile(cfg, &fd)
