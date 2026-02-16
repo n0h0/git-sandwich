@@ -64,7 +64,9 @@ git-sandwich --start '# CUSTOM START' --end '# CUSTOM END'
 git-sandwich [options] [paths...]
 ```
 
-### Required Flags
+### Required Options
+
+`--start` and `--end` must be provided via CLI flags or a config file (see [Configuration](#configuration)).
 
 | Flag              | Description                       |
 | ----------------- | --------------------------------- |
@@ -73,17 +75,56 @@ git-sandwich [options] [paths...]
 
 ### Optional Flags
 
-| Flag                              | Default       | Description                                      |
-| --------------------------------- | ------------- | ------------------------------------------------ |
-| `--base`                          | `origin/main` | Base ref for comparison                          |
-| `--head`                          | `HEAD`        | Head ref for comparison                          |
-| `--allow-nesting`                 | `false`       | Allow nested BEGIN/END blocks                    |
-| `--allow-boundary-with-outside`   | `false`       | Allow boundary changes together with outside changes |
-| `--json`                          | `false`       | Output results in JSON format                    |
-| `--include <glob>`                |               | Glob pattern for files to include (repeatable)   |
-| `--exclude <glob>`                |               | Glob pattern for files to exclude (repeatable)   |
+| Flag                              | Default                | Description                                      |
+| --------------------------------- | ---------------------- | ------------------------------------------------ |
+| `--base`                          | `origin/main`          | Base ref for comparison                          |
+| `--head`                          | `HEAD`                 | Head ref for comparison                          |
+| `--allow-nesting`                 | `false`                | Allow nested BEGIN/END blocks                    |
+| `--allow-boundary-with-outside`   | `false`                | Allow boundary changes together with outside changes |
+| `--json`                          | `false`                | Output results in JSON format                    |
+| `--include <glob>`                |                        | Glob pattern for files to include (repeatable)   |
+| `--exclude <glob>`                |                        | Glob pattern for files to exclude (repeatable)   |
+| `--config <path>`                 | `.git-sandwich.yml`    | Path to config file                              |
 
 Positional arguments `[paths...]` are passed as path filters to `git diff`.
+
+### Configuration
+
+Create a `.git-sandwich.yml` file in your project root to avoid passing flags every time:
+
+```yaml
+# .git-sandwich.yml
+start: "# CUSTOM START"
+end: "# CUSTOM END"
+base: "origin/main"
+head: "HEAD"
+allow_nesting: false
+allow_boundary_with_outside: false
+json: false
+include:
+  - "*.go"
+exclude:
+  - "vendor/**"
+```
+
+All fields are optional. However, `start` and `end` must be provided either in the config file or via CLI flags.
+
+**Priority**: CLI flags > config file > default values.
+
+- If `--config` is explicitly specified, the file must exist (error if missing).
+- If `--config` is not specified, `.git-sandwich.yml` is loaded from the current directory if it exists, otherwise silently skipped.
+- CLI flags always override config file values.
+
+```bash
+# Use default config file (.git-sandwich.yml)
+git-sandwich
+
+# Use a custom config file
+git-sandwich --config path/to/custom.yml
+
+# Override config file values with CLI flags
+git-sandwich --start "OTHER_BEGIN" --end "OTHER_END"
+```
 
 ### File Filtering (`--include` / `--exclude`)
 
