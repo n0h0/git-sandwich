@@ -15,11 +15,19 @@ Use cases:
 
 ## Installation
 
+### Homebrew (macOS / Linux)
+
+```bash
+brew install n0h0/tap/git-sandwich
+```
+
+### Go
+
 ```bash
 go install github.com/n0h0/git-sandwich@latest
 ```
 
-Or build from source:
+### Build from source
 
 ```bash
 git clone https://github.com/n0h0/git-sandwich.git

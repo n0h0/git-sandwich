@@ -65,6 +65,10 @@ designated BEGIN/END blocks. Changes outside these blocks are rejected.`,
 	},
 }
 
+func SetVersion(v, c, d string) {
+	rootCmd.Version = fmt.Sprintf("%s (commit: %s, built: %s)", v, c, d)
+}
+
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
 		os.Exit(1)
