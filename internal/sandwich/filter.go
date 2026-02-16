@@ -77,4 +77,3 @@ func matchesPattern(path, pattern string) bool {
 func containsGlobMeta(s string) bool {
 	return strings.ContainsAny(s, "*?[{")
 }
-
